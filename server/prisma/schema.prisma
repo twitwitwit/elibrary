@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  LIBRARIAN
+  STUDENT
+}
+
+enum BorrowStatus {
+  BORROWED
+  RETURNED
+  OVERDUE
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  name         String
+  email        String    @unique
+  password     String
+  role         Role      @default(STUDENT)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  borrowings   Borrow[]
+}
+
+model Book {
+  id              Int       @id @default(autoincrement())
+  title           String
+  isbn            String?   @unique
+  description     String?
+  coverImage      String?
+  fileUrl         String?
+  publishedYear   Int?
+  totalCopies     Int       @default(1)
+  availableCopies Int       @default(1)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  authorId        Int
+  categoryId      Int
+
+  author          Author    @relation(fields: [authorId], references: [id])
+  category        Category  @relation(fields: [categoryId], references: [id])
+  borrowings      Borrow[]
+}
+
+model Author {
+  id          Int      @id @default(autoincrement())
+  name        String
+  biography   String?
+  createdAt   DateTime @default(now())
+
+  books       Book[]
+}
+
+model Category {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+
+  books       Book[]
+}
+
+model Borrow {
+  id          Int          @id @default(autoincrement())
+  borrowedAt  DateTime     @default(now())
+  dueDate     DateTime
+  returnedAt  DateTime?
+  status      BorrowStatus @default(BORROWED)
+  userId      Int
+  bookId      Int
+
+  user        User        @relation(fields: [userId], references: [id])
+  book        Book        @relation(fields: [bookId], references: [id])
+}
